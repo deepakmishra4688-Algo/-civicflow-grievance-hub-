@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: civicflow-backend
+  labels:
+    app: civicflow-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: civicflow-backend
+  template:
+    metadata:
+      labels:
+        app: civicflow-backend
+    spec:
+      containers:
+        - name: backend
+          image: DOCKERHUB_REPO/civicflow-backend:latest
+          ports:
+            - containerPort: 5000
+          env:
+            - name: FLASK_ENV
+              value: production
+            - name: DATABASE_URL
+              value: postgresql://admin:admin123@db:5432/civicflow

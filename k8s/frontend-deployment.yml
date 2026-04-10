@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: civicflow-frontend
+  labels:
+    app: civicflow-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: civicflow-frontend
+  template:
+    metadata:
+      labels:
+        app: civicflow-frontend
+    spec:
+      containers:
+        - name: frontend
+          image: DOCKERHUB_REPO/civicflow-frontend:latest
+          ports:
+            - containerPort: 3000
+          env:
+            - name: REACT_APP_API_URL
+              value: http://civicflow-backend:5000/api

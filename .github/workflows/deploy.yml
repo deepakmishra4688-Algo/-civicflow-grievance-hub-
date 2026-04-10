@@ -73,3 +73,41 @@ jobs:
           docker tag civicflow-frontend ${{ secrets.DOCKERHUB_USERNAME }}/civicflow-frontend:latest
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/civicflow-backend:latest
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/civicflow-frontend:latest
+
+      - name: Deploy to production server via SSH
+        if: secrets.SSH_HOST != '' && secrets.SSH_USER != '' && secrets.SSH_PRIVATE_KEY != ''
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script: |
+            cd /var/www/civicflow || exit 1
+            docker compose pull
+            docker compose up -d
+
+      - name: Deploy to Kubernetes cluster
+        if: secrets.KUBE_CONFIG_DATA != '' && secrets.DOCKERHUB_USERNAME != ''
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 --decode > $HOME/.kube/config
+          python - <<'PY'
+import os
+from pathlib import Path
+
+repo = os.getenv('DOCKERHUB_USERNAME')
+for src, dst in [
+    ('k8s/backend-deployment.yml', '/tmp/backend-deployment.yml'),
+    ('k8s/frontend-deployment.yml', '/tmp/frontend-deployment.yml'),
+]:
+    text = Path(src).read_text()
+    Path(dst).write_text(text.replace('DOCKERHUB_REPO', repo))
+PY
+          kubectl apply -f /tmp/backend-deployment.yml
+          kubectl apply -f k8s/backend-service.yml
+          kubectl apply -f /tmp/frontend-deployment.yml
+          kubectl apply -f k8s/frontend-service.yml

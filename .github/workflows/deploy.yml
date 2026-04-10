@@ -1,5 +1,10 @@
 name: CI and Docker Build
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 on:
   push:
     branches: [main]
@@ -129,7 +134,9 @@ PY
         run: npm install --legacy-peer-deps
 
       - name: Build frontend for GitHub Pages
-        run: npm run build:gh
+        run: |
+          npm run build:gh
+          echo > dist/.nojekyll
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
@@ -137,3 +144,10 @@ PY
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
           publish_branch: gh-pages
+
+      - name: Configure GitHub Pages site
+        run: |
+          curl -s -X PATCH https://api.github.com/repos/${{ github.repository }}/pages \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            -d '{"source":{"branch":"gh-pages","path":"/"}}'

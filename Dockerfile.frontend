@@ -1,0 +1,18 @@
+FROM node:18-slim
+
+WORKDIR /app
+
+COPY package.json package-lock.json* ./
+RUN npm install --legacy-peer-deps
+
+COPY src/ src/
+COPY public/ public/
+COPY vite.config.js index.html ./
+
+ENV VITE_API_URL=http://localhost:5000/api
+
+RUN npm run build
+
+EXPOSE 3000
+
+CMD ["npm", "run", "preview"]

@@ -118,7 +118,6 @@ PY
           kubectl apply -f k8s/frontend-service.yml
 
   deploy-gh-pages:
-    needs: build-and-test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
 

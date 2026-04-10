@@ -3,6 +3,10 @@ from flask import Blueprint, request, jsonify
 from flask_mail import Message
 import uuid
 
+from extensions import db, mail
+from classifier import classify_complaint
+from models import Complaint, User
+
 complaints_bp = Blueprint('complaints', __name__, url_prefix='/api/complaints')
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/api/auth')
@@ -205,6 +209,7 @@ def dashboard():
         
         return jsonify({
             'total': total,
+            'total_complaints': total,
             'high_priority': high_priority,
             'new': new,
             'in_progress': in_progress,

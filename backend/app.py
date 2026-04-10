@@ -1,7 +1,5 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from flask_sqlalchemy import SQLAlchemy
-from flask_mail import Mail, Message
 from datetime import datetime
 import os
 from dotenv import load_dotenv
@@ -22,10 +20,12 @@ app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS', True)
 app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
 app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
 
-db = SQLAlchemy(app)
-mail = Mail(app)
+from extensions import db, mail
 
-# Import after db initialization
+db.init_app(app)
+mail.init_app(app)
+
+# Import after extensions initialization
 import models
 from routes import complaints_bp, auth_bp, admin_bp
 from classifier import classify_complaint
@@ -44,19 +44,6 @@ def classify():
     text = data.get('text', '')
     result = classify_complaint(text)
     return jsonify(result), 200
-
-@app.errorhandler(404)
-def not_found(error):
-    return jsonify({'error': 'Resource not found'}), 404
-
-@app.errorhandler(500)
-def internal_error(error):
-    return jsonify({'error': 'Internal server error'}), 500
-
-if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-    app.run(debug=True, host='0.0.0.0', port=5000)
 
 @app.errorhandler(404)
 def not_found(error):

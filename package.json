@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:gh": "vite build --base ./",
+    "deploy:gh-pages": "npm run build:gh",
     "preview": "vite preview"
   },
   "dependencies": {

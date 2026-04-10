@@ -111,3 +111,29 @@ PY
           kubectl apply -f k8s/backend-service.yml
           kubectl apply -f /tmp/frontend-deployment.yml
           kubectl apply -f k8s/frontend-service.yml
+
+  deploy-gh-pages:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install frontend dependencies
+        run: npm install --legacy-peer-deps
+
+      - name: Build frontend for GitHub Pages
+        run: npm run build:gh
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          publish_branch: gh-pages

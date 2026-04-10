@@ -9,7 +9,7 @@ COPY src/ src/
 COPY public/ public/
 COPY vite.config.js index.html ./
 
-ENV REACT_APP_API_URL=http://backend:5000/api
+ENV VITE_API_URL=http://backend:5000/api
 
 RUN npm run build
 RUN npm install -g serve

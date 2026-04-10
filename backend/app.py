@@ -2,7 +2,13 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from datetime import datetime
 import os
+import sys
 from dotenv import load_dotenv
+
+# Ensure backend package imports resolve when app.py is launched from backend/ or workspace root
+ROOT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+if ROOT_PATH not in sys.path:
+    sys.path.insert(0, ROOT_PATH)
 
 load_dotenv()
 
@@ -20,15 +26,15 @@ app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS', True)
 app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
 app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
 
-from extensions import db, mail
+from backend.extensions import db, mail
 
 db.init_app(app)
 mail.init_app(app)
 
 # Import after extensions initialization
-import models
-from routes import complaints_bp, auth_bp, admin_bp
-from classifier import classify_complaint
+from backend import models
+from backend.routes import complaints_bp, auth_bp, admin_bp
+from backend.classifier import classify_complaint
 
 app.register_blueprint(complaints_bp)
 app.register_blueprint(auth_bp)

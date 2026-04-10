@@ -3,9 +3,9 @@ from flask import Blueprint, request, jsonify
 from flask_mail import Message
 import uuid
 
-from extensions import db, mail
-from classifier import classify_complaint
-from models import Complaint, User
+from backend.extensions import db, mail
+from backend.classifier import classify_complaint
+from backend.models import Complaint, User
 
 complaints_bp = Blueprint('complaints', __name__, url_prefix='/api/complaints')
 
@@ -24,10 +24,25 @@ def submit_complaint():
         # Generate reference ID
         ref_id = f"CMP-{uuid.uuid4().hex[:8].upper()}"
         
+        # Determine or create anonymous user if no user_id is provided
+        user_id = data.get('user_id')
+        if user_id is None:
+            anonymous = User.query.filter_by(email='anonymous@civicflow.local').first()
+            if not anonymous:
+                anonymous = User(
+                    email='anonymous@civicflow.local',
+                    phone='0000000000',
+                    password_hash='anonymous',
+                    is_admin=False
+                )
+                db.session.add(anonymous)
+                db.session.flush()
+            user_id = anonymous.id
+
         # Create complaint record
         complaint = Complaint(
             ref_id=ref_id,
-            user_id=data.get('user_id', 1),
+            user_id=user_id,
             name=data.get('name'),
             phone=data.get('phone'),
             email=data.get('email'),
@@ -138,9 +153,13 @@ def search_complaints():
 def send_confirmation_email(complaint):
     """Send confirmation email to citizen"""
     try:
+        recipients = [complaint.email] if complaint.email else []
+        if not recipients:
+            return
+
         msg = Message(
             subject=f'Grievance Registered: {complaint.ref_id}',
-            recipients=[complaint.email or complaint.phone],
+            recipients=recipients,
             body=f'''
 Dear {complaint.name},
 

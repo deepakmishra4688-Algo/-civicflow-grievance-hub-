@@ -1,7 +1,7 @@
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.naive_bayes import MultinomialNB
 import numpy as np
-from training_data import get_training_data
+from backend.training_data import get_training_data
 
 # Get large training dataset (500+ samples)
 all_texts, all_labels = get_training_data()
